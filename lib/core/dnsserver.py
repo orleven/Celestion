@@ -123,7 +123,7 @@ class DNSServerResolver(BaseResolver):
                         if dns_setting.dns_redirect:
                             dns_log = db.session.query(DNSLog).filter(and_(DNSLog.domain == domain, DNSLog.ip == ip,
                                                                            DNSLog.update_time > get_time(
-                                                                               get_timestamp() - 10))).first()
+                                                                               get_timestamp() - 60))).first()
 
                             if dns_log:
                                 answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value2))
