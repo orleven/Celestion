@@ -17,7 +17,6 @@ from lib.handers import db
 from lib.core.data import access_log
 from lib.core.data import cache_log
 from lib.core.data import log
-from lib.core.data import msg_queue
 from lib.core.config import BaseConfig
 from lib.core.config import Config
 from lib.core.model import User
@@ -28,7 +27,7 @@ from lib.core.enums import API_STATUS
 from lib.core.enums import LOG_TYPE
 from lib.core.enums import ROLE
 from lib.core.enums import USER_STATUS
-from lib.utils.util import parser_header
+from lib.utils.util import parser_header, seng_message
 from lib.utils.util import get_safe_ex_string
 from lib.utils.util import get_time
 
@@ -66,7 +65,13 @@ class WebDomainResponse(HTTPException):
         cache_log.info(f'ip: {ip}, method: {method} url: {url}, headers: {request_headers}, data: {request_content}')
 
         msg = f'WEBLOG 上线\nurl: {url}\nip: {ip}\nheaders: {request_headers}\nbody: {request_content}\ntime: {update_time}'
-        msg_queue.put(msg)
+
+        flag, err = seng_message(msg)
+        log_msg = msg.replace('\n', ', ').replace('\r', ', ')
+        if flag:
+            log.success(f'Send message to IM, msg: {log_msg}')
+        else:
+            log.error(f'Send message to IM error, msg: {log_msg}, error: {err}')
 
     def get_response(self, environ=None, scope = None):
         path = request.path

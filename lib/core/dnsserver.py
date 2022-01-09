@@ -2,6 +2,9 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
+import time
+import threading
+from queue import Queue
 from dnslib import RR
 from dnslib import QTYPE
 from dnslib import RCODE
@@ -12,19 +15,19 @@ from dnslib.server import BaseResolver
 from sqlalchemy import and_
 from lib.core.config import BaseConfig
 from lib.core.data import log
-from lib.core.data import msg_queue
 from lib.core.data import cache_log
 from lib.core.model import DNSLog
 from lib.core.model import DNSSetting
 from lib.handers import db
 from lib.handers.basehander import save_sql
 from lib.utils.util import get_time
+from lib.utils.util import seng_message
 from lib.utils.util import get_timestamp
-
 
 class DNSServerLogger:
 
-    def __init__(self):
+    def __init__(self, msg_queue):
+        self.msg_queue = msg_queue
         self.dns_domain = BaseConfig.DNS_DOMAIN
         self.admin_domain = BaseConfig.ADMIN_DOMAIN
 
@@ -55,7 +58,7 @@ class DNSServerLogger:
             cache_log.info(msg)
 
             msg = f'DNSLOG 上线\ndomain: {domain}\nip: {ip}\ntype: {dns_type}\ntime: {update_time}'
-            msg_queue.put(msg)
+            self.msg_queue.put(msg)
 
     def log_request(self, handler, request):
         pass
@@ -85,7 +88,6 @@ class DNSServerResolver(BaseResolver):
         self.dns_domain = BaseConfig.DNS_DOMAIN
         self.admin_domain = BaseConfig.ADMIN_DOMAIN
         self.admin_server_ip = BaseConfig.ADMIN_SERVER_IP
-
         zone = f'''
 *.{self.dns_domain}.       IN      NS      {self.ns1_domain}.
 *.{self.dns_domain}.       IN      NS      {self.ns2_domain}.
@@ -112,23 +114,26 @@ class DNSServerResolver(BaseResolver):
             for name, rtype, rr in self.zone:
                 if getattr(qname, self.eq)(name) and (qtype == rtype or qtype == 'ANY' or rtype == 'CNAME'):
 
-                     dns_setting = db.session.query(DNSSetting).filter(and_(DNSSetting.domain == domain, DNSSetting.type == 'A')).order_by(DNSSetting.update_time.desc()).first()
-                     if dns_setting:
-                         # DNS 重定向
-                         if dns_setting.dns_redirect:
-                             dns_log = db.session.query(DNSLog).filter(and_(DNSLog.domain == domain, DNSLog.ip == ip, DNSLog.update_time > get_time(get_timestamp() - 10))).first()
+                    dns_setting = db.session.query(DNSSetting).filter(
+                        and_(DNSSetting.domain == domain, DNSSetting.type == 'A')).order_by(
+                        DNSSetting.update_time.desc()).first()
 
-                             if dns_log:
-                                 answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value2))
-                             else:
-                                 answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value1))
-                         else:
-                             answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value1))
+                    if dns_setting:
+                        # DNS 重定向
+                        if dns_setting.dns_redirect:
+                            dns_log = db.session.query(DNSLog).filter(and_(DNSLog.domain == domain, DNSLog.ip == ip,
+                                                                           DNSLog.update_time > get_time(
+                                                                               get_timestamp() - 10))).first()
 
-                     else:
-                         answer = RR(qname, QTYPE.A, ttl=0, rdata=A(self.server_ip))
-
-                     reply.add_answer(answer)
+                            if dns_log:
+                                answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value2))
+                            else:
+                                answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value1))
+                        else:
+                            answer = RR(qname, QTYPE.A, ttl=0, rdata=A(dns_setting.value1))
+                    else:
+                        answer = RR(qname, QTYPE.A, ttl=0, rdata=A(self.server_ip))
+                    reply.add_answer(answer)
 
                 if rtype in ['CNAME', 'NS', 'MX', 'PTR']:
                     for a_name, a_rtype, a_rr in self.zone:
@@ -143,10 +148,27 @@ class DNSServerResolver(BaseResolver):
         return reply
 
 def dns_server(address='0.0.0.0', port=53):
+    msg_queue = Queue()
+
+    t = threading.Thread(target=msg_center, args=(msg_queue,))
+    t.start()
+
     resolver = DNSServerResolver()
     log.info("Starting Zone Resolver (%s:%d) [%s]" % ("*", 53, "UDP"))
-    udp_server = DNSServer(resolver, port=port, address=address, logger=DNSServerLogger())
+    udp_server = DNSServer(resolver, port=port, address=address, logger=DNSServerLogger(msg_queue))
     udp_server.start()
+
+def msg_center(msg_queue):
+    while True:
+        if msg_queue.qsize() > 0:
+            msg = msg_queue.get()
+            flag, err = seng_message(msg)
+            msg = msg.replace('\n', ', ').replace('\r', ', ')
+            if flag:
+                log.success(f'Send message to IM, msg: {msg}')
+            else:
+                log.error(f'Send message to IM error, msg: {msg}, error: {err}')
+        time.sleep(0.1)
 
 if __name__ == '__main__':
     dns_server()

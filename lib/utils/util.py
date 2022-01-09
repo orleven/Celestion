@@ -70,6 +70,7 @@ def seng_message(msg="", reminders=None):
     for i in range(0, 3):
         try:
             r = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
+
             return True, r.text
         except Exception as e:
             error = get_safe_ex_string(e)

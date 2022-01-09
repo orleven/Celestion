@@ -4,7 +4,6 @@
 
 import os
 import sys
-from queue import Queue
 from lib.core.config import DataBaseConfig
 from lib.core.log import Logger
 from sqlalchemy.orm import sessionmaker
@@ -23,8 +22,3 @@ log = server_log
 engine = create_engine(DataBaseConfig.SQLALCHEMY_DATABASE_URI)
 
 engine_session = sessionmaker(engine)
-
-msg_queue = Queue()
-
-
-
