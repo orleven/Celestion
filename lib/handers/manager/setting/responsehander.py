@@ -125,7 +125,7 @@ def response_add():
     response_reason = request.json.get('response_reason', 'OK')
     mark = request.json.get('mark', '')
 
-    if name != '':
+    if name == '':
         return API_STATUS.ERROR_INVALID_INPUT
 
     try:
