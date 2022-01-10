@@ -99,7 +99,7 @@ def dnslog_delete():
 @fix_response
 def dnslog_clear_old():
     response = {'data': {'res': []}}
-    delete_time = get_time(get_timestamp() - 60 * 60 * 24 * 1)
+    delete_time = get_time(get_timestamp())
     condition = (1 == 1)
     condition = and_(condition, DNSLog.update_time <= delete_time)
     db.session.query(DNSLog).filter(condition).delete(synchronize_session=False)

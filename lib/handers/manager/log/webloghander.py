@@ -135,7 +135,7 @@ def weblog_detail():
 @fix_response
 def weblog_clear_old():
     response = {'data': {'res': []}}
-    delete_time = get_time(get_timestamp() - 60 * 60 * 24 * 3)
+    delete_time = get_time(get_timestamp())
     condition = (1 == 1)
     condition = and_(condition, WebLog.update_time <= delete_time)
     db.session.query(WebLog).filter(condition).delete(synchronize_session=False)
