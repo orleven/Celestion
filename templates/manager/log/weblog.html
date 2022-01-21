@@ -74,7 +74,7 @@
                 </div>
                 <br/>
                 <button id="select_delete_button" class="btn btn-danger" type="button">Delete</button>
-                <button id="select_clear_old_button" class="btn btn-danger" type="button">Clear Old</button>
+                <button id="select_clear_all_button" class="btn btn-danger" type="button">Clear Old</button>
             </div>
         </div>
     </div>
@@ -333,11 +333,11 @@
             });
 
         });
-        $("#select_clear_old_button").click(function () {
+        $("#select_clear_all_button").click(function () {
             var data = {};
             $.ajax({
                 type: "POST",
-                url: "/weblog/clear_old",
+                url: "/weblog/clear_all",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",

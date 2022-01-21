@@ -94,10 +94,10 @@ def dnslog_delete():
     return API_STATUS.ERROR_IS_NOT_EXIST
 
 
-@mod.route('/clear_old', methods=['POST', 'GET'])
+@mod.route('/clear_all', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dnslog_clear_old():
+def dnslog_clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp())
     condition = (1 == 1)

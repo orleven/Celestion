@@ -74,10 +74,10 @@ def log_list():
     response['data']['total'] = db.session.query(Log).filter(condition).count()
     return response
 
-@mod.route('/clear_old', methods=['POST', 'GET'])
+@mod.route('/clear_all', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def log_clear_old():
+def log_clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp()- 60 * 60 * 24 * 7)
     condition = (Log.status == LOG_STATUS.OK)
