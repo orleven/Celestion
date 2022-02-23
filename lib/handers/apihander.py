@@ -36,7 +36,7 @@ def api_dnslog_list():
         condition = and_(condition, DNSLog.ip == ip)
 
     if domain != '':
-        condition = and_(condition, DNSLog.domain == domain)
+        condition = and_(condition, DNSLog.domain.like('%' + domain + '%'))
 
     if per_page == 'all':
         for row in db.session.query(DNSLog).filter(condition).all():
