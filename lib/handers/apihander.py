@@ -33,7 +33,7 @@ def api_dnslog_list():
     condition = (1 == 1)
 
     if ip != '':
-        condition = and_(condition, DNSLog.ip == ip)
+        condition = and_(condition, DNSLog.ip.like('%' + ip + '%'))
 
     if domain != '':
         condition = and_(condition, DNSLog.domain.like('%' + domain + '%'))
@@ -81,7 +81,7 @@ def api_weblog_list():
     condition = (1 == 1)
 
     if ip != '':
-        condition = and_(condition, WebLog.ip == ip)
+        condition = and_(condition, WebLog.ip.like('%' + ip + '%'))
     if url != '':
         condition = and_(condition, WebLog.url.like('%' + url + '%'))
 
