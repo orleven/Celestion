@@ -25,7 +25,7 @@
             <div class="left_col scroll-view">
                 <!-- menu logo -->
                 <div class="navbar nav_title" style="border: 0;">
-                    <a href="/dashboard" class="site_title"><i class="fa fa-paw"></i><span> Celestion</span></a>
+                    <a href="{{ url_for('index.dashboard') }}" class="site_title"><i class="fa fa-paw"></i><span> Celestion</span></a>
                 </div>
                 <div class="clearfix"></div>
                 <!-- /menu logo -->
@@ -52,22 +52,22 @@
                             <li>
                                 <a><i class="fa fa-book"></i> Log <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu" style="display: none;">
-                                    <li><a href="/dnslog/index"> DNSLog </a></li>
-                                    <li><a href="/weblog/index"> WebLog </a></li>
+                                    <li><a href="{{ url_for('dnslog.index') }}"> DNSLog </a></li>
+                                    <li><a href="{{ url_for('weblog.index') }}"> WebLog </a></li>
                                 </ul>
                             </li>
                             <li>
                                 <a><i class="fa fa-cog"></i> Setting <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu" style="display: none;">
-                                    <li><a href="/response/index"> Response </a></li>
-                                    <li><a href="/dns/index"> DNS </a></li>
+                                    <li><a href="{{ url_for('response.index') }}"> Response </a></li>
+                                    <li><a href="{{ url_for('dns.index') }}"> DNS </a></li>
                                 </ul>
                             </li>
                             <li>
                                 <a><i class="fa fa-laptop"></i> System <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu" style="display: none;">
-                                    <li><a href="/user/index"> User </a></li>
-                                    <li><a href="/log/index"> Log </a></li>
+                                    <li><a href="{{ url_for('user.index') }}"> User </a></li>
+                                    <li><a href="{{ url_for('log.index') }}"> Log </a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -92,9 +92,9 @@
                                 <img src="{{ url_for('static', filename='img/img.jpg') }}" alt="">{{username}}
                             </a>
                             <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="/profile">Profile</a>
-                                <a class="dropdown-item" href="/reset">Reset</a>
-                                <a class="dropdown-item" href="/logout"><i class="fa fa-sign-out pull-right"></i> Log
+                                <a class="dropdown-item" href="{{ url_for('index.profile') }}">Profile</a>
+                                <a class="dropdown-item" href="{{ url_for('index.reset') }}">Reset</a>
+                                <a class="dropdown-item" href="{{ url_for('index.logout') }}"><i class="fa fa-sign-out pull-right"></i> Log
                                     Out</a>
                             </div>
                         </li>

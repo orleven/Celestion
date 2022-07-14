@@ -29,7 +29,7 @@
                     <div class="col-md-1 col-sm-1"></div>
                     <div class="col-md-10 col-sm-10 ">
                         <form id="profile-form" data-parsley-validate class="form-horizontal form-label-left"
-                              method="post" action="/profile">
+                              method="post" action="{{ url_for('index.profile') }}">
 
                             <label for="username">Username:</label>
                             <input type="text" id="username" name="username" required="required"

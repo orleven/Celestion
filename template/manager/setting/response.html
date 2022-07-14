@@ -244,7 +244,7 @@
                 }
                 $.ajax({
                     type: "POST",
-                    url: "/response/list",
+                    url: "{{ url_for('response.list') }}",
                     cache: false,  //禁用缓存
                     data: JSON.stringify(data),   //传入已封装的参数
                     contentType: "application/json",
@@ -323,7 +323,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/response/edit",
+                url: "{{ url_for('response.edit') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -340,7 +340,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });
@@ -357,7 +357,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/response/add",
+                url: "{{ url_for('response.add') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -374,7 +374,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });
@@ -395,7 +395,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/response/delete",
+                url: "{{ url_for('response.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -413,7 +413,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             })
         });
@@ -423,7 +423,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/response/delete",
+                url: "{{ url_for('response.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -441,7 +441,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });

@@ -194,7 +194,7 @@
                 }
                 $.ajax({
                     type: "POST",
-                    url: "/log/list",
+                    url: "{{ url_for('log.list') }}",
                     cache: false,  //禁用缓存
                     data: JSON.stringify(data),   //传入已封装的参数
                     contentType: "application/json",
@@ -273,7 +273,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/log/delete",
+                url: "{{ url_for('log.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -291,7 +291,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             })
         });
@@ -301,7 +301,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/log/delete",
+                url: "{{ url_for('log.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -319,7 +319,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });

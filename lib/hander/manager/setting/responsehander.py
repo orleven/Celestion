@@ -21,7 +21,7 @@ mod = Blueprint('response', __name__, url_prefix=f'{PREFIX_URL}/response')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def response_index():
+def index():
     ctx = {}
     ctx['title'] = 'Response'
     ctx['username'] = session.get('username')
@@ -30,7 +30,7 @@ def response_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def response_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -78,7 +78,7 @@ def response_list():
 @mod.route('/edit', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def response_edit():
+def edit():
     response_id = request.json.get('id', '')
     name = request.json.get('name', '')
     path = request.json.get('path', '')
@@ -116,7 +116,7 @@ def response_edit():
 @mod.route('/add', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def response_add():
+def add():
     name = request.json.get('name', '')
     path = request.json.get('path', '')
     response_status_code = request.json.get('response_status_code', 200)
@@ -151,7 +151,7 @@ def response_add():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def response_delete():
+def delete():
     response = {'data': {'res': []}}
     response_id = request.json.get('id', '')
     response_ids = request.json.get('ids', '')

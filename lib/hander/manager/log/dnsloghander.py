@@ -20,7 +20,7 @@ mod = Blueprint('dnslog', __name__, url_prefix=f'{PREFIX_URL}/dnslog')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def dnslog_index():
+def index():
     ctx = {}
     ctx['title'] = 'DNSLog'
     ctx['username'] = session.get('username')
@@ -29,7 +29,7 @@ def dnslog_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dnslog_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -69,7 +69,7 @@ def dnslog_list():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dnslog_delete():
+def delete():
     response = {'data': {'res': []}}
     dnslog_id = request.json.get('id', '')
     dnslog_ids = request.json.get('ids', '')
@@ -98,7 +98,7 @@ def dnslog_delete():
 @mod.route('/clear_all', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dnslog_clear_all():
+def clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp())
     condition = (1 == 1)

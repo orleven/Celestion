@@ -29,7 +29,7 @@
                     <div class="col-md-1 col-sm-1"></div>
                     <div class="col-md-10 col-sm-10">
                         <form id="password-form" data-parsley-validate class="form-horizontal form-label-left"
-                              method="post" action="/reset">
+                              method="post" action="{{ url_for('index.reset') }}">
 
                             <label for="password">Password:</label>
                             <input type="text" id="password" name="password" required="required"
@@ -62,7 +62,7 @@
                     <div class="col-md-1 col-sm-1"></div>
                     <div class="col-md-10 col-sm-10">
                         <form id="apikey-form" data-parsley-validate class="form-horizontal form-label-left"
-                              method="post" action="/apikey">
+                              method="post" action="{{ url_for('index.apikey') }}">
                             <label for="password">API Key:</label>
                             <input type="text" id="apikey" name="apikey" required="required"
                                    class="form-control" placeholder="apikey" disabled value="{{api_key}}">

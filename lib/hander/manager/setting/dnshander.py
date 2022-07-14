@@ -21,7 +21,7 @@ mod = Blueprint('dns', __name__, url_prefix=f'{PREFIX_URL}/dns')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def dns_index():
+def index():
     ctx = {}
     ctx['title'] = 'DNS'
     ctx['username'] = session.get('username')
@@ -31,7 +31,7 @@ def dns_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dns_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -75,7 +75,7 @@ def dns_list():
 @mod.route('/edit', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dns_edit():
+def edit():
     dns_id = request.json.get('id', '')
     name = request.json.get('name', '')
     domain = request.json.get('domain', '')
@@ -106,7 +106,7 @@ def dns_edit():
 @mod.route('/add', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dns_add():
+def add():
     name = request.json.get('name', '')
     domain = request.json.get('domain', '')
     value1 = request.json.get('value1', '')
@@ -136,7 +136,7 @@ def dns_add():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def dns_delete():
+def delete():
     response = {'data': {'res': []}}
     dns_id = request.json.get('id', '')
     dns_ids = request.json.get('ids', '')

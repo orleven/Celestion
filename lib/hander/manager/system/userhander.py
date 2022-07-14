@@ -26,7 +26,7 @@ mod = Blueprint('user', __name__, url_prefix=f'{PREFIX_URL}/user')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def user_index():
+def index():
     ctx = {}
     ctx['title'] = 'User'
     ctx['username'] = session.get('username')
@@ -36,7 +36,7 @@ def user_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def user_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -75,7 +75,7 @@ def user_list():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def user_delete():
+def delete():
     response = {'data': {'res': []}}
     user_id = request.json.get('id', '')
     user_ids = request.json.get('ids', '')
@@ -104,7 +104,7 @@ def user_delete():
 @mod.route('/add', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def user_add():
+def add():
     email = request.json.get('email', '')
     username = request.json.get('username', '')
     mark = request.json.get('mark', '')
@@ -138,7 +138,7 @@ def user_add():
 @mod.route('/edit', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def user_edit():
+def edit():
     id = int(request.json.get('id', ''))
     # email = request.json.get('email', '')
     # username = request.json.get('username', '')
@@ -180,7 +180,7 @@ def user_edit():
 @mod.route('/reset', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def user_reset():
+def reset():
     id = int(request.json.get('id', ''))
     user = db.session.query(User).filter_by(id=id).first()
     if user:

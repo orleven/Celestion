@@ -22,7 +22,7 @@ mod = Blueprint('weblog', __name__, url_prefix=f'{PREFIX_URL}/weblog')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def weblog_index():
+def index():
     ctx = {}
     ctx['title'] = 'WebLog'
     ctx['username'] = session.get('username')
@@ -31,7 +31,7 @@ def weblog_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def weblog_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -77,7 +77,7 @@ def weblog_list():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def weblog_delete():
+def delete():
     response = {'data': {'res': []}}
     weblog_id = request.json.get('id', '')
     weblog_ids = request.json.get('ids', '')
@@ -106,7 +106,7 @@ def weblog_delete():
 @mod.route('/detail', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def weblog_detail():
+def detail():
     response = {'data': {'res': []}}
     weblog_id = request.json.get('id', '')
     if weblog_id != '':
@@ -134,7 +134,7 @@ def weblog_detail():
 @mod.route('/clear_all', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def weblog_clear_all():
+def clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp())
     condition = (1 == 1)

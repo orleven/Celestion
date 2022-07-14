@@ -25,7 +25,7 @@ mod = Blueprint('log', __name__, url_prefix=f'{PREFIX_URL}/log')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
-def log_index():
+def index():
     ctx = {}
     ctx['title'] = 'Log'
     ctx['username'] = session.get('username')
@@ -36,7 +36,7 @@ def log_index():
 @mod.route('/list', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def log_list():
+def list():
     response = {
         'data': {
             'res': [],
@@ -78,7 +78,7 @@ def log_list():
 @mod.route('/clear_all', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def log_clear_all():
+def clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp()- 60 * 60 * 24 * 7)
     condition = (Log.status == LogStatus.OK)
@@ -91,7 +91,7 @@ def log_clear_all():
 @mod.route('/delete', methods=['POST', 'GET'])
 @login_check
 @fix_response
-def log_delete():
+def delete():
     response = {'data': {'res': []}}
     log_id = request.json.get('id', '')
     log_ids = request.json.get('ids', '')

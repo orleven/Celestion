@@ -258,7 +258,7 @@
                 }
                 $.ajax({
                     type: "POST",
-                    url: "/dns/list",
+                    url: "{{ url_for('dns.list') }}",
                     cache: false,  //禁用缓存
                     data: JSON.stringify(data),   //传入已封装的参数
                     contentType: "application/json",
@@ -346,7 +346,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/dns/edit",
+                url: "{{ url_for('dns.edit') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -363,7 +363,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });
@@ -382,7 +382,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/dns/add",
+                url: "{{ url_for('dns.add') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -399,7 +399,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });
@@ -420,7 +420,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/dns/delete",
+                url: "{{ url_for('dns.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -438,7 +438,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             })
         });
@@ -448,7 +448,7 @@
             };
             $.ajax({
                 type: "POST",
-                url: "/dns/delete",
+                url: "{{ url_for('dns.delete') }}",
                 cache: false,  //禁用缓存
                 data: JSON.stringify(data),   //传入已封装的参数
                 contentType: "application/json",
@@ -466,7 +466,7 @@
                     }
                 },
                 error: function (err) {
-                    window.location.href = "/";
+                    window.location.href = "{{ url_for('index.index') }}";
                 }
             });
         });
