@@ -8,20 +8,21 @@ from flask import render_template
 from flask import Blueprint
 from flask import session
 from sqlalchemy import and_
-from lib.handers import db
+from lib.hander import db
 from lib.core.model import User
-from lib.handers.basehander import save_sql
-from lib.utils.util import get_time
-from lib.core.enums import API_STATUS
-from lib.core.enums import USER_STATUS
-from lib.core.enums import ROLE
-from lib.core.config import BaseConfig
-from lib.utils.util import random_string
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.hander.basehander import save_sql
+from lib.util.util import get_time
+from lib.core.enums import ApiStatus
+from lib.core.enums import UserStatus
+from lib.core.enums import UserRole
+from lib.core.env import *
+from lib.core.g import conf
+from lib.util.util import random_string
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 from werkzeug.security import generate_password_hash
 
-mod = Blueprint('user', __name__, url_prefix='/user')
+mod = Blueprint('user', __name__, url_prefix=f'{PREFIX_URL}/user')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
@@ -29,7 +30,7 @@ def user_index():
     ctx = {}
     ctx['title'] = 'User'
     ctx['username'] = session.get('username')
-    ctx['user_status'] = USER_STATUS
+    ctx['user_status'] = UserStatus
     return render_template('manager/system/user.html', **ctx)
 
 @mod.route('/list', methods=['POST', 'GET'])
@@ -56,10 +57,10 @@ def user_list():
     if email != '':
         condition = and_(condition, User.email.like('%' + email + '%'))
 
-    if status != '' and status in [USER_STATUS.OK, USER_STATUS.BAN]:
+    if status != '' and status in [UserStatus.OK, UserStatus.BAN]:
         condition = and_(condition, User.status == status)
 
-    if role != '' and role in [ROLE.ADMIN, ROLE.GUEST, ROLE.USER]:
+    if role != '' and role in [UserRole.ADMIN, UserRole.GUEST, UserRole.USER]:
         condition = and_(condition, User.role == role)
 
     if per_page == 'all':
@@ -98,7 +99,7 @@ def user_delete():
             except:
                 pass
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 @mod.route('/add', methods=['POST', 'GET'])
 @login_check
@@ -110,30 +111,29 @@ def user_add():
     role = request.json.get('role', '')
     description = request.json.get('description', '')
     if not re.match(r"^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9\-.]+)$", email):
-        return API_STATUS.ERROR_INVALID_INPUT_EMAIL
+        return ApiStatus.ERROR_INVALID_INPUT_EMAIL
 
     if db.session.query(User).filter(User.email == email).first():
-        return API_STATUS.ERROR_PRIMARY
+        return ApiStatus.ERROR_PRIMARY
 
     if username == None or username == '':
         username = email.split('@')[0]
 
-    if role == '' or role not in [ROLE.ADMIN, ROLE.GUEST, ROLE.USER]:
-        return API_STATUS.ERROR_INVALID_INPUT
+    if role == '' or role not in [UserRole.ADMIN, UserRole.GUEST, UserRole.USER]:
+        return ApiStatus.ERROR_INVALID_INPUT
 
-    status = USER_STATUS.OK
-    password = generate_password_hash(BaseConfig.DEFAUTL_PASSWORD)
+    status = UserStatus.OK
     login_failed = 0
     api_key = random_string(32)
     created_time = login_time = failed_time = get_time()
 
-    user = User(email=email, username=username, password=password, status=status, mark=mark, role=role, api_key=api_key,
+    user = User(email=email, username=username, status=status, mark=mark, role=role, api_key=api_key,
                 login_failed=login_failed, created_time=created_time, login_time=login_time, failed_time=failed_time, description=description)
-
+    user.password = user.generate_password_hash(conf.manager.default_password)
     if save_sql(user):
         return {'user': {'res': [email]}}
     else:
-        return API_STATUS.ERROR
+        return ApiStatus.ERROR
 
 @mod.route('/edit', methods=['POST', 'GET'])
 @login_check
@@ -152,20 +152,20 @@ def user_edit():
         #     user.email = email
         #     user.username = email.split('@')[0]
         # else:
-        #     return API_STATUS.ERROR_INVALID_INPUT_EMAIL
+        #     return ApiStatus.ERROR_INVALID_INPUT_EMAIL
 
         # if db.session.query(User).filter(and_(User.email == email, User.id != user.id)).first():
-        #     return API_STATUS.ERROR_PRIMARY
+        #     return ApiStatus.ERROR_PRIMARY
 
-        if status in [USER_STATUS.OK, USER_STATUS.BAN]:
+        if status in [UserStatus.OK, UserStatus.BAN]:
             user.status = status
         else:
-            return API_STATUS.ERROR_INVALID_INPUT
+            return ApiStatus.ERROR_INVALID_INPUT
 
-        if role != '' and role in [ROLE.ADMIN, ROLE.GUEST, ROLE.USER]:
+        if role != '' and role in [UserRole.ADMIN, UserRole.GUEST, UserRole.USER]:
             user.role = role
         else:
-            return API_STATUS.ERROR_INVALID_INPUT
+            return ApiStatus.ERROR_INVALID_INPUT
 
         user.update_time = get_time()
         user.mark = mark
@@ -173,9 +173,9 @@ def user_edit():
         if save_sql(user):
             return {'user': {'res': [user.id]}}
         else:
-            return API_STATUS.ERROR
+            return ApiStatus.ERROR
 
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 @mod.route('/reset', methods=['POST', 'GET'])
 @login_check
@@ -185,11 +185,11 @@ def user_reset():
     user = db.session.query(User).filter_by(id=id).first()
     if user:
         user.api_key = random_string(32)
-        user.password = generate_password_hash(BaseConfig.DEFAUTL_PASSWORD)
+        user.password = user.generate_password_hash(conf.manager.default_password)
         user.update_time = get_time()
         if save_sql(user):
             return {'user': {'res': [user.id]}}
         else:
-            return API_STATUS.ERROR
+            return ApiStatus.ERROR
 
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST

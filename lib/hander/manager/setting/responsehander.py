@@ -8,15 +8,16 @@ from flask import render_template
 from flask import Blueprint
 from flask import session
 from sqlalchemy import and_
-from lib.handers import db
+from lib.core.env import *
+from lib.hander import db
 from lib.core.model import ResponseSetting
-from lib.core.enums import API_STATUS
-from lib.utils.util import get_time
-from lib.handers.basehander import save_sql
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.core.enums import ApiStatus
+from lib.util.util import get_time
+from lib.hander.basehander import save_sql
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 
-mod = Blueprint('response', __name__, url_prefix='/response')
+mod = Blueprint('response', __name__, url_prefix=f'{PREFIX_URL}/response')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
@@ -97,7 +98,7 @@ def response_edit():
                 response_headers = json.loads(response_headers)
                 response_headers = json.dumps(response_headers)
             except:
-                return API_STATUS.ERROR_INVALID_INPUT
+                return ApiStatus.ERROR_INVALID_INPUT
             response_setting.response_headers = response_headers
 
             response_setting.response_status_code = int(response_status_code)
@@ -109,7 +110,7 @@ def response_edit():
             response_setting.update_time = get_time()
             save_sql(response_setting)
             return {'data': {'res': [response_id]}}
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 
 @mod.route('/add', methods=['POST', 'GET'])
@@ -126,13 +127,13 @@ def response_add():
     mark = request.json.get('mark', '')
 
     if name == '':
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     try:
         response_headers = json.loads(response_headers)
         response_headers = json.dumps(response_headers)
     except:
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
 
     response_status_code = int(response_status_code)
@@ -173,4 +174,4 @@ def response_delete():
             except:
                 pass
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST

@@ -8,19 +8,20 @@ from flask import Blueprint
 from flask import session
 from sqlalchemy import and_
 from sqlalchemy import or_
+from lib.core.env import *
 from lib.core.model import Log
 from lib.core.model import User
-from lib.handers import db
-from lib.utils.util import get_timestamp
-from lib.utils.util import get_time
-from lib.handers.basehander import save_sql
-from lib.core.enums import API_STATUS
-from lib.core.enums import LOG_STATUS
-from lib.core.enums import LOG_TYPE
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.hander import db
+from lib.util.util import get_timestamp
+from lib.util.util import get_time
+from lib.hander.basehander import save_sql
+from lib.core.enums import ApiStatus
+from lib.core.enums import LogStatus
+from lib.core.enums import WebLogType
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 
-mod = Blueprint('log', __name__, url_prefix='/log')
+mod = Blueprint('log', __name__, url_prefix=f'{PREFIX_URL}/log')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
@@ -28,7 +29,7 @@ def log_index():
     ctx = {}
     ctx['title'] = 'Log'
     ctx['username'] = session.get('username')
-    ctx['log_type'] = LOG_TYPE
+    ctx['log_type'] = WebLogType
     return render_template('manager/system/log.html', **ctx)
 
 
@@ -48,7 +49,7 @@ def log_list():
     url = request.json.get('url', '')
     ip = request.json.get('ip', '')
     user = request.json.get('user', '')
-    condition = (Log.status == LOG_STATUS.OK)
+    condition = (Log.status == LogStatus.OK)
     if update_time != '':
         condition = and_(condition, Log.update_time.like('%' + update_time + '%'))
 
@@ -80,10 +81,10 @@ def log_list():
 def log_clear_all():
     response = {'data': {'res': []}}
     delete_time = get_time(get_timestamp()- 60 * 60 * 24 * 7)
-    condition = (Log.status == LOG_STATUS.OK)
+    condition = (Log.status == LogStatus.OK)
     condition = and_(condition, Log.update_time <= delete_time)
     for row in db.session.query(Log).filter(condition).all():
-        row.status = LOG_STATUS.DELETE
+        row.status = LogStatus.DELETE
         save_sql(row)
     return response
 
@@ -99,7 +100,7 @@ def log_delete():
             log_id = int(log_id)
             log = db.session.query(Log).filter(Log.id == log_id).first()
             if log:
-                log.status = LOG_STATUS.DELETE
+                log.status = LogStatus.DELETE
                 save_sql(log)
                 response['data']['res'].append(log_id)
         if log_ids != '':
@@ -108,10 +109,10 @@ def log_delete():
                     log_id = int(log_id.replace(' ', ''))
                     log = db.session.query(Log).filter(Log.id == log_id).first()
                     if log:
-                        log.status = LOG_STATUS.DELETE
+                        log.status = LogStatus.DELETE
                         save_sql(log)
                         response['data']['res'].append(log_id)
             except:
                 pass
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST

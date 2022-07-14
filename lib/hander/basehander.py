@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
+from lib.core.env import *
 import json
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers.response import Response
@@ -9,29 +10,30 @@ from flask import request
 from flask import jsonify
 from flask import Blueprint
 from flask import session
+from flask import url_for
 from flask import redirect
 from sqlalchemy import or_
 from functools import wraps
-from lib.handers import app
-from lib.handers import db
-from lib.core.data import access_log
-from lib.core.data import cache_log
-from lib.core.data import log
-from lib.core.config import BaseConfig
-from lib.core.config import Config
+from lib.hander import app
+from lib.hander import db
+from lib.core.g import access_log
+from lib.core.g import cache_log
+from lib.core.g import log
+from lib.core.g import conf
 from lib.core.model import User
 from lib.core.model import WebLog
 from lib.core.model import ResponseSetting
 from lib.core.model import Log
-from lib.core.enums import API_STATUS
-from lib.core.enums import LOG_TYPE
-from lib.core.enums import ROLE
-from lib.core.enums import USER_STATUS
-from lib.utils.util import parser_header, seng_message
-from lib.utils.util import get_safe_ex_string
-from lib.utils.util import get_time
+from lib.core.enums import ApiStatus
+from lib.core.enums import WebLogType
+from lib.core.enums import UserRole
+from lib.core.enums import UserStatus
+from lib.core.common import seng_message
+from lib.util.util import parser_header
+from lib.util.util import get_safe_ex_string
+from lib.util.util import get_time
 
-mod = Blueprint('base', __name__, url_prefix='/')
+mod = Blueprint('base', __name__, url_prefix=f'{PREFIX_URL}/')
 
 
 class WebDomainResponse(HTTPException):
@@ -43,7 +45,7 @@ class WebDomainResponse(HTTPException):
         ip = request.remote_addr
         request_content = request.stream.read()
         request_content_length = len(request_content)
-        dns_domain = BaseConfig.DNS_DOMAIN
+        dns_domain = conf.dnslog.dns_domain
         address = request.host.split(':')
         host = address[0]
         port = address[1] if len(address) == 2 else "80"
@@ -109,8 +111,8 @@ def fix_response(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
-        status = API_STATUS.SUCCESS['status']
-        msg = API_STATUS.SUCCESS['msg']
+        status = ApiStatus.SUCCESS['status']
+        msg = ApiStatus.SUCCESS['msg']
         if isinstance(ret, dict):
             if 'status' in ret.keys() and ret['status'] != status:
                 status = ret['status']
@@ -136,7 +138,7 @@ def login_check(func):
         if request.path in ['/login', '/logout']:
             pass
 
-        elif request.path.startswith('/' + Config.STATICS):
+        elif request.path.startswith('/' + STATIC):
             pass
 
         elif request.path.startswith("/api/"):
@@ -144,22 +146,22 @@ def login_check(func):
 
             # 只收json格式
             if request.json == None:
-                return jsonify(API_STATUS.ERROR_ILLEGAL_PROTOCOL)
+                return jsonify(ApiStatus.ERROR_ILLEGAL_PROTOCOL)
 
             # api 访问使用api-key
             elif api_key == None or api_key == '':
-                return jsonify(API_STATUS.ERROR_INVALID_API_KEY)
+                return jsonify(ApiStatus.ERROR_INVALID_API_KEY)
 
             else:
                 user = db.session.query(User).filter(or_(User.api_key == api_key)).first()
                 if user != None:
-                    if user.to_json()['status'] != USER_STATUS.OK:
-                        return jsonify(API_STATUS.ERROR_ACCOUNT)
+                    if user.to_json()['status'] != UserStatus.OK:
+                        return jsonify(ApiStatus.ERROR_ACCOUNT)
                     else:
                         user.login_time = get_time()
                         save_sql(user)
                 else:
-                    return jsonify(API_STATUS.ERROR_INVALID_API_KEY)
+                    return jsonify(ApiStatus.ERROR_INVALID_API_KEY)
 
         else:
             user_token = session.get('user')
@@ -169,15 +171,15 @@ def login_check(func):
                     user_dict = user.to_json()
 
                     # 账号被ban
-                    if user_dict['status'] != USER_STATUS.OK:
-                        return jsonify(API_STATUS.ERROR_ACCOUNT)
+                    if user_dict['status'] != UserStatus.OK:
+                        return jsonify(ApiStatus.ERROR_ACCOUNT)
 
                     else:
-                        if user_dict['role'] not in [ROLE.GUEST, ROLE.ADMIN, ROLE.USER]:
-                            return jsonify(API_STATUS.ERROR_ACCOUNT)
+                        if user_dict['role'] not in [UserRole.GUEST, UserRole.ADMIN, UserRole.USER]:
+                            return jsonify(ApiStatus.ERROR_ACCOUNT)
 
                         ip = request.remote_addr
-                        log_type = LOG_TYPE.LOGIN  # 日志类型
+                        log_type = WebLogType.LOGIN  # 日志类型
                         description = str(request.json)
                         url = request.path
                         update_time = get_time()
@@ -185,9 +187,9 @@ def login_check(func):
                                   update_time=update_time)
                         save_sql(log)
                 else:
-                    return redirect('/login')
+                    return redirect(url_for('index.login'))
             else:
-                return redirect('/login')
+                return redirect(url_for('index.login'))
         return func(*args, **kwargs)
 
     return wrapper
@@ -195,21 +197,21 @@ def login_check(func):
 
 @app.errorhandler(400)
 def error_400(error):
-    return jsonify(API_STATUS.ERROR_400), 400
+    return jsonify(ApiStatus.ERROR_400), 400
 
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify(API_STATUS.ERROR_404), 404
+    return jsonify(ApiStatus.ERROR_404), 404
 
 @app.errorhandler(500)
 def error_500(error):
-    return jsonify(API_STATUS.ERROR_500), 500
+    return jsonify(ApiStatus.ERROR_500), 500
 
 @app.before_request
 def before_request():
     # 返回自定义页面
     host = request.host if ':' not in request.host else request.host.split(':')[0]
-    if host == BaseConfig.ADMIN_DOMAIN:
+    if host == conf.dnslog.admin_domain:
         pass
     else:
         return WebDomainResponse()
@@ -218,8 +220,8 @@ def before_request():
 @app.after_request
 def after_request(resp):
     host = request.host if ':' not in request.host else request.host.split(':')[0]
-    if host == BaseConfig.ADMIN_DOMAIN:
-        resp.headers.set("Server", Config.VERSION_STRING)
+    if host == conf.dnslog.admin_domain:
+        resp.headers.set("Server", VERSION_STRING)
         resp.headers.set("X-XSS-Protection", "1; mode=block")
         resp.headers.set("X-Frame-Options", "DENY")
         resp.headers.set("X-Content-Type-Options", "nosniff")

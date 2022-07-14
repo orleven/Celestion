@@ -2,48 +2,53 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
-import os
-import sys
+import re
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from lib.core.enums import CUSTOM_LOGGING
-from lib.core.config import Config
-from lib.utils.util import get_safe_ex_string
+from lib.core.env import *
+from lib.core.enums import CustomLogging
 
 
 class Logger:
-    def __init__(self, name=os.path.split(os.path.splitext(sys.argv[0])[0])[-1], level=CUSTOM_LOGGING.INFO,
-                 use_console=True):
+    """
+    日志模块, 记录日志。
+    """
 
-        formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S")
-        logging.addLevelName(CUSTOM_LOGGING.INFO, "*")
-        logging.addLevelName(CUSTOM_LOGGING.SUCCESS, "+")
-        logging.addLevelName(CUSTOM_LOGGING.ERROR, "-")
-        logging.addLevelName(CUSTOM_LOGGING.WARNING, "!")
-        logging.addLevelName(CUSTOM_LOGGING.DEBUG, "DEBUG")
-        logging.addLevelName(CUSTOM_LOGGING.CRITICAL, "CRITICAL")
+    def __init__(self, name=MAIN_NAME, level=CustomLogging.INFO, use_console=True, backupCount=7):
+
+        formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+        logging.addLevelName(CustomLogging.INFO, "*")
+        logging.addLevelName(CustomLogging.SUCCESS, "+")
+        logging.addLevelName(CustomLogging.ERROR, "-")
+        logging.addLevelName(CustomLogging.WARNING, "!")
+        logging.addLevelName(CustomLogging.DEBUG, "DEBUG")
+        logging.addLevelName(CustomLogging.CRITICAL, "CRITICAL")
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
-        log_name = f'{name}.log'
-        log_dir = Config.LOGS_PATH
-        log_path = os.path.join(log_dir, log_name)
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        if not os.path.exists(LOG_PATH):
+            os.makedirs(LOG_PATH)
 
-        self.log_handler = TimedRotatingFileHandler(log_path, when='D', encoding='utf-8')
+        log_name = f'{name}.log'
+        log_path = os.path.join(LOG_PATH, log_name)
+
+        # interval 滚动周期， when="MIDNIGHT", interval=1 表示每天0点为更新点，每天生成一个文件,backupCount  表示日志保存个数
+        self.log_handler = TimedRotatingFileHandler(log_path, when='D', interval=1, backupCount=backupCount, encoding='utf-8')
+        self.log_handler.suffix = "%Y-%m-%d.log"
+        self.log_handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
         self.log_handler.setFormatter(formatter)
         self.logger.addHandler(self.log_handler)
 
         if use_console:
             try:
                 console_handler = ColorizingStreamHandler(sys.stdout)
-                console_handler.level_map[CUSTOM_LOGGING.INFO] = (None, "white", False)
-                console_handler.level_map[CUSTOM_LOGGING.SUCCESS] = (None, "green", False)
-                console_handler.level_map[CUSTOM_LOGGING.ERROR] = (None, "red", False)
-                console_handler.level_map[CUSTOM_LOGGING.WARNING] = (None, "yellow", False)
-                console_handler.level_map[CUSTOM_LOGGING.DEBUG] = (None, "cyan", False)
-                console_handler.level_map[CUSTOM_LOGGING.CRITICAL] = (None, "red", False)
+                console_handler.level_map[CustomLogging.INFO] = (None, "white", False)
+                console_handler.level_map[CustomLogging.SUCCESS] = (None, "green", False)
+                console_handler.level_map[CustomLogging.ERROR] = (None, "red", False)
+                console_handler.level_map[CustomLogging.WARNING] = (None, "yellow", False)
+                console_handler.level_map[CustomLogging.DEBUG] = (None, "cyan", False)
+                console_handler.level_map[CustomLogging.CRITICAL] = (None, "red", False)
                 self.console_handler = console_handler
             except Exception:
                 self.console_handler = logging.StreamHandler(sys.stdout)
@@ -62,26 +67,25 @@ class Logger:
             else:
                 self.logger.log(level, msg, *args, **kwargs)
         except UnicodeEncodeError as e:
-            msg = get_safe_ex_string(e)
-            print(f"Error log: {msg}")
+            print(f"Error log: {str(e)}")
 
     def info(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.INFO, msg, *args, **kwargs)
+        self.log(CustomLogging.INFO, msg, *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.ERROR, msg, *args, **kwargs)
+        self.log(CustomLogging.ERROR, msg, *args, **kwargs)
 
     def success(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.SUCCESS, msg, *args, **kwargs)
+        self.log(CustomLogging.SUCCESS, msg, *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.WARNING, msg, *args, **kwargs)
+        self.log(CustomLogging.WARNING, msg, *args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.DEBUG, msg, *args, **kwargs)
+        self.log(CustomLogging.DEBUG, msg, *args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
-        self.log(CUSTOM_LOGGING.CRITICAL, msg, *args, **kwargs)
+        self.log(CustomLogging.CRITICAL, msg, *args, **kwargs)
 
 
 class ColorizingStreamHandler(logging.StreamHandler):

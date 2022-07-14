@@ -17,7 +17,7 @@ Celestion 是一个无回显漏洞测试辅助平台，平台使用flask编写�
 
 1. 申请A.com, B.com 2个域名，并配置NS、A记录，参考[BugScanTeam/DNSLog](https://github.com/BugScanTeam/DNSLog) 的域名配置部分#安装-3
 
-2. 修改 `lib/core/config`，配置内容请看注释。
+2. 修改 `conf/celestion.conf`（第一次运行后生成），配置内容请看注释。
 
 3. 运行初始化
 
@@ -57,7 +57,7 @@ python celestion.py
 
 ```python
 import requests
-url = "http://{ADMIN_DOMAIN}/{path}"
+url = "http://{ADMIN_DOMAIN}/{PREFIX_URL}/{path}"
 headers = {
     "API-Key": "你的API-Key", 
     "Content-Type": "application/json",
@@ -67,7 +67,8 @@ response = requests.request("POST", url, headers=headers, json=data)
 print(response.json())
 ```
 
-API-Key 在 `http://{ADMIN_DOMAIN}/reset` 页面可以看到。
+API-Key 在 `http://{ADMIN_DOMAIN}/{PREFIX_URL}/reset` 页面可以看到。
+PREFIX_URL 默认为 `celestion`
 
 1. `/api/weblog/list`
 

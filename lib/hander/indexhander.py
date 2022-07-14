@@ -9,15 +9,16 @@ from flask import render_template
 from flask import redirect
 from flask import Blueprint
 from flask import session
+from flask import url_for
 from flask import make_response
 from sqlalchemy import or_
-from lib.handers import db
+from lib.hander import db
 from lib.core.model import User
-from lib.utils.util import get_time
-from lib.handers.basehander import save_sql
-from lib.core.enums import USER_STATUS
-from lib.handers.basehander import login_check
-from lib.utils.util import random_string
+from lib.util.util import get_time
+from lib.hander.basehander import save_sql
+from lib.core.enums import UserStatus
+from lib.hander.basehander import login_check
+from lib.util.util import random_string
 from werkzeug.security import generate_password_hash
 
 mod = Blueprint('index', __name__, url_prefix='/')
@@ -29,7 +30,7 @@ def index() -> Response:
     ctx = {}
     ctx['title'] = 'index'
     ctx['username'] = session.get('username')
-    return redirect('/dashboard')
+    return redirect(url_for('index.dashboard'))
 
 
 @mod.route('/dashboard', methods=['POST', 'GET'])
@@ -52,7 +53,7 @@ def login():
             user = db.session.query(User).filter(or_(User.username == username, User.email == username)).first()
             if user is not None:
                 if user.verify_password(password):
-                    if user.to_json()['status'] != USER_STATUS.OK:
+                    if user.to_json()['status'] != UserStatus.OK:
                         ctx['message'] = 'Ban account!'
                     else:
                         # 刷新登陆时间以及登陆失败次数
@@ -75,7 +76,7 @@ def login():
 @mod.route('/logout', methods=['POST', 'GET'])
 def logout():
     session.clear()
-    return make_response(redirect('/login', code=302))
+    return redirect(url_for('index.login'))
 
 
 @mod.route('/profile', methods=['POST', 'GET'])
@@ -156,4 +157,4 @@ def apikey():
         user.api_key = random_string(32)
         user.update_time = get_time()
         save_sql(user)
-    return redirect('/reset')
+    return redirect(url_for('index.reset'))

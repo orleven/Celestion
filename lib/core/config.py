@@ -2,92 +2,116 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
-import os
+from lib.core.env import *
+import json
+import configparser
+from attribdict import AttribDict
+from lib.util.util import random_string
 
-class Config(object):
-    """
-    配置
-    """
-    # 当前版本
-    VERSION = "1.0"
+def config_parser():
+    """解析配置文件，如不存在则创建"""
 
-    # 版本标志
-    VERSION_STRING = f"celestion/{VERSION}"
+    if not os.path.exists(CONFIG_FILE_PATH):
+        init_conf(CONFIG_FILE_PATH)
+        exit(f"Please set the {PROJECT_NAME} config in {CONFIG_FILE_PATH}...")
 
-    # 描述
-    DESCRIPTION = 'Celestion is a non-echoed vulnerability testing auxiliary platform. The platform is written in flask and provides DNSLOG, HTTPLOG and other functions. (in dev).'
+    config = load_conf(CONFIG_FILE_PATH)
 
-    # 目录配置
-    STATICS = 'static'
-    ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    STATICS_PATH = os.path.join(ROOT_PATH, STATICS)
-    LOGS_PATH = os.path.join(ROOT_PATH, 'logs')
-    TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
+    return config
 
 
-class BaseConfig(object):
-    """
-    基础配置
-    """
-    # MD5的盐
-    HALT = 'BBXiU0HLdxlH1eBp8lQur2RlWEwfIwoO'
+def load_conf(path):
+    """加载配置文件"""
 
-    # SECRET KEY
-    SECRET_KEY = '#ma=s-l!2obwj%h-6uu^sbw+4%i2w79%v3^ill62k3&7tjf5dc'
+    config = AttribDict()
+    cf = configparser.ConfigParser()
+    cf.read(path)
+    sections = cf.sections()
+    for section in sections:
+        config[section] = AttribDict()
+        for option in cf.options(section):
+            value = cf.get(section, option)
+            try:
+                if value.startswith("{") and value.endswith("}") or value.startswith("[") and value.endswith("]"):
+                    value = json.loads(value)
+                elif value.lower() == "false":
+                    value = False
+                elif value.lower() == "true":
+                    value = True
+                else:
+                    value = int(value)
+            except Exception as e:
+                pass
+            config[section][option] = value
+    return config
 
-    # SEND FILE MAX AGE DEFAULT
-    SEND_FILE_MAX_AGE_DEFAULT = 0
 
-    # A.com的域名的NS记录
-    NS1_DOMAIN = 'ns1.A.com'
-    NS2_DOMAIN = 'ns2.A.com'
+def init_conf(path):
+    """初始化配置文件"""
 
-    # B.com，主要做DNS记录
-    DNS_DOMAIN = 'B.com'
+    if not os.path.exists(CONFIG_PATH):
+        os.mkdir(CONFIG_PATH)
 
-    # B.com 的默认解析地址
-    DEFAULT_SERVER_IP = '127.0.0.1'
+    configs = {
+        ("basic", f"This is a basic config for {PROJECT_NAME}"): {
+            ("timeout", "Connection timeout"): 5,
+            ("heartbeat_time", ""): 60,
+            ("secret_key", "Secret key"): random_string(64),
+            ("dingding_robot_url", "dingding robot url"): "https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxx",
+        },
+        ("mysql", f"This is a mysql config for {PROJECT_NAME}"): {
+            ("host", ""): "127.0.0.1",
+            ("port", ""): 3306,
+            ("username", ""): "root",
+            ("password", ""): "123456",
+            ("dbname", ""): PROJECT_NAME.lower(),
+            ("charset", ""): "utf8mb4",
+            ("collate", ""): "utf8mb4_general_ci",
+        },
+        ("manager", f"This is a manager config for {PROJECT_NAME}"): {
+            ("listen_host", ""): "0.0.0.0",
+            ("listen_port", ""): "8000",
+            ("default_mail_siffix", ""): f"@{PROJECT_NAME.lower()}.com",
+            ("default_password", ""): f"{PROJECT_NAME}@123",
+        },
+        ("dnslog", f"This is a dnslog config for {PROJECT_NAME}"): {
+            ("listen_host", ""): "0.0.0.0",
+            ("listen_port", ""): "53",
+            ("ns1_domain", "A.com的域名的NS记录"): 'ns1.A.com',
+            ("ns2_domain", "A.com的域名的NS记录"): 'ns2.A.com',
+            ("dns_domain", "B.com，主要做DNS记录"): 'B.com',
+            ("default_server_ip", "B.com 的默认解析地址"): '127.0.0.1',
+            ("admin_domain", "admin管理的域名"): 'admin.B.com',
+            ("admin_server_ip", "admin域名解析地址"): '127.0.0.1',
+        },
+    }
 
-    # 记录管理的域名
-    ADMIN_DOMAIN = 'admin.B.com'
+    cf = configparser.ConfigParser(allow_no_value=True)
+    for (section, section_comment), section_value in configs.items():
+        cf.add_section(section)
 
-    # admin域名解析地址
-    ADMIN_SERVER_IP = '127.0.0.1'
+        if section_comment and section_comment != "":
+            cf.set(section, fix_comment_content(f"{section_comment}\r\n"))
 
-    # 控制台默认密码
-    DEFAUTL_PASSWORD = 'Celestion@123'
+        for (key, key_comment), key_value in section_value.items():
+            if key_comment and key_comment != "":
+                cf.set(section, fix_comment_content(key_comment))
+            if isinstance(key_value, dict) or isinstance(key_value, list):
+                key_value = json.dumps(key_value)
+            else:
+                key_value = str(key_value)
+            cf.set(section, key, f"{key_value}\r\n")
 
-    # 钉钉机器人api地址
-    DINGDING_ROBOT_URL = 'https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxx'
+    with open(path, 'w+') as configfile:
+        cf.write(configfile)
 
-    # 超时
-    TIMEOUT = 5
 
-class DataBaseConfig(object):
-    """
-    数据库配置
-    """
+def fix_comment_content(content):
+    """按照80个字符一行就行格式化处理"""
 
-    MYSQL_USERNAME = 'root'
-    MYSQL_PASSWORD = '123456'
-    MYSQL_HOST = 'localhost'
-    MYSQL_PORT = 3306
-    MYSQL_DBNAME = 'celestion'
-    MYSQL_CHARSET = 'utf8mb4'
-    MYSQL_COLLATE = 'utf8mb4_general_ci'
-    MYSQL_SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DBNAME}?charset={MYSQL_CHARSET}'
-
-    SQLITE_DBNAME = 'celestion'
-    SQLTIE_SQLALCHEMY_DATABASE_URI = f'sqlite+pysqlite:///{Config.ROOT_PATH}/{SQLITE_DBNAME}.db'
-
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
-    SQLALCHEMY_ECHO = False
-
-    # 数据库类型，默认为SQLite，如需要使用mysql，切换即可
-    # SQLALCHEMY_DATABASE_URI = MYSQL_SQLALCHEMY_DATABASE_URI
-    SQLALCHEMY_DATABASE_URI = SQLTIE_SQLALCHEMY_DATABASE_URI
-
-    if SQLALCHEMY_DATABASE_URI.startswith("mysql"):
-        SQLALCHEMY_POOL_SIZE = 100
-        SQLALCHEMY_MAX_OVERFLOW = 20
+    text = f'; '
+    for i in range(0, len(content)):
+        if i != 0 and i % 80 == 0:
+            text += '\r\n; '
+        text += content[i]
+    return text

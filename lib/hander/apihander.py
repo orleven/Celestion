@@ -2,18 +2,19 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
+from lib.core.env import *
 import json
 from sqlalchemy import and_
 from flask import request
 from flask import Blueprint
-from lib.core.enums import API_STATUS
+from lib.core.enums import ApiStatus
 from lib.core.model import DNSLog
 from lib.core.model import WebLog
-from lib.handers import db
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.hander import db
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 
-mod = Blueprint('api', __name__, url_prefix='/api')
+mod = Blueprint('api', __name__, url_prefix=f'{PREFIX_URL}/api')
 
 @mod.route('/dnslog/list', methods=['POST', 'GET'])
 @login_check
@@ -117,5 +118,5 @@ def api_weblog_detail():
             weblog_dic['request'] += bytes.decode(weblog.request_content)
             response['data']['res'].append(weblog_dic)
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 

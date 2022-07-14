@@ -8,15 +8,16 @@ from flask import render_template
 from flask import Blueprint
 from flask import session
 from sqlalchemy import and_
-from lib.handers import db
+from lib.core.env import *
+from lib.hander import db
 from lib.core.model import WebLog
-from lib.core.enums import API_STATUS
-from lib.utils.util import get_timestamp
-from lib.utils.util import get_time
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.core.enums import ApiStatus
+from lib.util.util import get_timestamp
+from lib.util.util import get_time
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 
-mod = Blueprint('weblog', __name__, url_prefix='/weblog')
+mod = Blueprint('weblog', __name__, url_prefix=f'{PREFIX_URL}/weblog')
 
 
 @mod.route('/index', methods=['POST', 'GET'])
@@ -99,7 +100,7 @@ def weblog_delete():
             except:
                 pass
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 
 @mod.route('/detail', methods=['POST', 'GET'])
@@ -127,7 +128,7 @@ def weblog_detail():
             weblog_dic['response'] += bytes.decode(weblog.response_content)
             response['data']['res'].append(weblog_dic)
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 
 @mod.route('/clear_all', methods=['POST', 'GET'])

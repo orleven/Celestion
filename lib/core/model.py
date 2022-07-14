@@ -4,10 +4,9 @@
 
 from datetime import datetime
 from flask_login import UserMixin
-from lib.core.enums import LOG_STATUS
+from lib.core.enums import LogStatus
 from werkzeug.security import check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from lib.core.config import BaseConfig
+from werkzeug.security import generate_password_hash
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -18,7 +17,12 @@ from sqlalchemy import BLOB
 from sqlalchemy import BOOLEAN
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from lib.core.data import engine
+from lib.core.g import engine
+from lib.core.g import conf
+from lib.util.util import get_time
+from lib.util.util import get_timedelta
+from lib.util.cipherutil import jwtdecode
+from lib.util.cipherutil import jwtencode
 
 
 Base = declarative_base(engine)
@@ -32,7 +36,7 @@ class DNSSetting(Base):
     domain = Column(String(255))
     value1 = Column(String(255))
     value2 = Column(String(255))
-    dns_domain = Column(String(255), default=BaseConfig.DNS_DOMAIN)
+    dns_domain = Column(String(255), default=conf.dnslog.dns_domain)
     dns_redirect = Column(BOOLEAN(), default=False)
     type = Column(String(255), default='A')
     update_time = Column(DateTime())
@@ -159,7 +163,7 @@ class Log(Base):
     ip = Column(String(40))  # 日志产生IP
     log_type = Column(String(255))  # 日志类型
     description = Column(Text())
-    status = Column(String(40), default=LOG_STATUS.OK)  # 日志状态，0为逻辑删除
+    status = Column(String(40), default=LogStatus.OK)  # 日志状态，0为逻辑删除
     url = Column(Text())
     update_time = Column(DateTime())
 
@@ -218,16 +222,30 @@ class User(UserMixin, Base):
     def verify_password(self, password):
         return check_password_hash(self.password, password)
 
-    def generate_auth_token(self, expiration):
-        s = Serializer(BaseConfig.SECRET_KEY, expires_in=expiration)
-        return s.dumps({'id': self.id}).decode('utf-8')
+    def generate_password_hash(self, password=None):
+        if password is None:
+            password = self.password
+        return generate_password_hash(password)
+
+    def generate_auth_token(self, expiration=3600):
+        message = {
+            "id": self.id,
+            "email": self.email,
+            "username": self.username,
+            "status": self.status,
+            "role": self.role,
+            "exp": get_time() + get_timedelta(seconds=expiration)
+        }
+        token = jwtencode(message, conf.basic.secret_key, algorithm="HS256")
+        return token
 
     @staticmethod
     def verify_auth_token(token):
-        s = Serializer(BaseConfig.SECRET_KEY)
         try:
-            data = s.loads(token)
+            data = jwtdecode(token, conf.basic.secret_key, algorithms=["HS256"], do_time_check=True)
+            if data and isinstance(data, dict):
+                from lib.hander import db
+                return db.session.query(User).get(data["id"])
         except:
             return None
-        from lib.handers import db
-        return db.session.query(User).get(data['id'])
+        return None

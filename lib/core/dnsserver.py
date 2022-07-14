@@ -13,23 +13,23 @@ from dnslib import A
 from dnslib.server import DNSServer
 from dnslib.server import BaseResolver
 from sqlalchemy import and_
-from lib.core.config import BaseConfig
-from lib.core.data import log
-from lib.core.data import cache_log
+from lib.core.g import log
+from lib.core.g import conf
+from lib.core.g import cache_log
 from lib.core.model import DNSLog
 from lib.core.model import DNSSetting
-from lib.handers import db
-from lib.handers.basehander import save_sql
-from lib.utils.util import get_time
-from lib.utils.util import seng_message
-from lib.utils.util import get_timestamp
+from lib.hander import db
+from lib.hander.basehander import save_sql
+from lib.util.util import get_time
+from lib.core.common import seng_message
+from lib.util.util import get_timestamp
 
 class DNSServerLogger:
 
     def __init__(self, msg_queue):
         self.msg_queue = msg_queue
-        self.dns_domain = BaseConfig.DNS_DOMAIN
-        self.admin_domain = BaseConfig.ADMIN_DOMAIN
+        self.dns_domain = conf.dnslog.dns_domain
+        self.admin_domain = conf.dnslog.admin_domain
 
     def log_data(self, dnsobj):
         pass
@@ -82,12 +82,12 @@ class DNSServerResolver(BaseResolver):
             If 'glob' is True use glob match against zone file
         """
 
-        self.ns1_domain = BaseConfig.NS1_DOMAIN
-        self.ns2_domain = BaseConfig.NS2_DOMAIN
-        self.server_ip = BaseConfig.DEFAULT_SERVER_IP
-        self.dns_domain = BaseConfig.DNS_DOMAIN
-        self.admin_domain = BaseConfig.ADMIN_DOMAIN
-        self.admin_server_ip = BaseConfig.ADMIN_SERVER_IP
+        self.ns1_domain = conf.dnslog.ns1_domain
+        self.ns2_domain = conf.dnslog.ns2_domain
+        self.server_ip = conf.dnslog.default_server_ip
+        self.dns_domain = conf.dnslog.dns_domain
+        self.admin_domain = conf.dnslog.admin_domain
+        self.admin_server_ip = conf.dnslog.admin_server_ip
         zone = f'''
 *.{self.dns_domain}.       IN      NS      {self.ns1_domain}.
 *.{self.dns_domain}.       IN      NS      {self.ns2_domain}.
@@ -154,7 +154,7 @@ def dns_server(address='0.0.0.0', port=53):
     t.start()
 
     resolver = DNSServerResolver()
-    log.info("Starting Zone Resolver (%s:%d) [%s]" % ("*", 53, "UDP"))
+    log.info(f"Starting Zone Resolver ({address}:{port}) [UDP]")
     udp_server = DNSServer(resolver, port=port, address=address, logger=DNSServerLogger(msg_queue))
     udp_server.start()
 

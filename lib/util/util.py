@@ -2,13 +2,11 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
-import json
 import time
 import string
 import random
-import requests
+from datetime import timedelta
 from datetime import datetime
-from lib.core.config import BaseConfig
 
 def parser_header(headers, flag: bool = True):
     """解析headers并返回"""
@@ -36,6 +34,17 @@ def random_string(length=32):
         string.ascii_letters + string.digits + '_'
     ) for _ in range(length)])
 
+def get_timedelta(seconds=3600):
+    return timedelta(seconds=seconds)
+
+def get_time_str(date: datetime = None, fmt="%Y-%m-%d %H:%M:%S") -> str:
+    """获取时间字符串"""
+
+    if date:
+        return datetime.strftime(date, fmt)
+    else:
+        return datetime.strftime(get_time(), fmt)
+
 
 def get_safe_ex_string(ex):
     """异常消息处理"""
@@ -47,32 +56,3 @@ def get_safe_ex_string(ex):
     else:
         retVal = str(ex)
     return retVal
-
-def seng_message(msg="", reminders=None):
-
-    if reminders is None:
-        reminders = []
-
-    url = BaseConfig.DINGDING_ROBOT_URL
-    timeout = BaseConfig.TIMEOUT
-    headers = {'Content-Type': 'application/json;charset=utf-8'}
-    data = {
-        "msgtype": "text",
-        "at": {
-            "atMobiles": reminders,
-            "isAtAll": False,
-        },
-        "text": {
-            "content": msg,
-        }
-    }
-    error = ""
-    for i in range(0, 3):
-        try:
-            r = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
-
-            return True, r.text
-        except Exception as e:
-            error = get_safe_ex_string(e)
-    return False, error
-

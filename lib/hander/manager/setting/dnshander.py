@@ -7,16 +7,17 @@ from flask import render_template
 from flask import Blueprint
 from flask import session
 from sqlalchemy import and_
-from lib.handers import db
+from lib.core.env import *
+from lib.hander import db
 from lib.core.model import DNSSetting
-from lib.core.enums import API_STATUS
-from lib.core.enums import DNS_REDIRECE
-from lib.utils.util import get_time
-from lib.handers.basehander import save_sql
-from lib.handers.basehander import fix_response
-from lib.handers.basehander import login_check
+from lib.core.enums import ApiStatus
+from lib.core.enums import DNSRedirect
+from lib.util.util import get_time
+from lib.hander.basehander import save_sql
+from lib.hander.basehander import fix_response
+from lib.hander.basehander import login_check
 
-mod = Blueprint('dns', __name__, url_prefix='/dns')
+mod = Blueprint('dns', __name__, url_prefix=f'{PREFIX_URL}/dns')
 
 @mod.route('/index', methods=['POST', 'GET'])
 @login_check
@@ -24,7 +25,7 @@ def dns_index():
     ctx = {}
     ctx['title'] = 'DNS'
     ctx['username'] = session.get('username')
-    ctx['DNS_REDIRECE'] = DNS_REDIRECE
+    ctx['DNS_REDIRECT'] = DNSRedirect
     return render_template('manager/setting/dns.html', **ctx)
 
 @mod.route('/list', methods=['POST', 'GET'])
@@ -84,7 +85,7 @@ def dns_edit():
     mark = request.json.get('mark', '')
 
     if dns_redirect != '' and isinstance(dns_redirect, bool) and dns_redirect and value2 == "":
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     if dns_id != '':
         dns_id = int(dns_id)
@@ -99,7 +100,7 @@ def dns_edit():
             dns_setting.update_time = get_time()
             save_sql(dns_setting)
             return {'data': {'res': [dns_id]}}
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST
 
 
 @mod.route('/add', methods=['POST', 'GET'])
@@ -114,16 +115,16 @@ def dns_add():
     mark = request.json.get('mark', '')
 
     if name == '':
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     if value1 == '':
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     if domain == '':
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     if isinstance(dns_redirect, bool) and dns_redirect and value2 == "":
-        return API_STATUS.ERROR_INVALID_INPUT
+        return ApiStatus.ERROR_INVALID_INPUT
 
     update_time = get_time()
 
@@ -158,4 +159,4 @@ def dns_delete():
             except:
                 pass
         return response
-    return API_STATUS.ERROR_IS_NOT_EXIST
+    return ApiStatus.ERROR_IS_NOT_EXIST

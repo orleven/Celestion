@@ -2,26 +2,26 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
-class LOG_STATUS:
+class LogStatus:
     """
     日志状态
     """
     OK = 'OK'
     DELETE = 'Delete'
 
-class USER_STATUS:
+class UserStatus:
     """
     用户状态
     """
     OK = 'OK'
     BAN = 'Ban'
 
-class ROLE:
+class UserRole:
     ADMIN = 'Admin'
     USER = 'User'
     GUEST = 'Guest'
 
-class CUSTOM_LOGGING:
+class CustomLogging:
     SUCCESS = 9
     ERROR = 8
     WARNING = 7
@@ -30,17 +30,17 @@ class CUSTOM_LOGGING:
     CRITICAL = 10
 
 
-class LOG_TYPE:
+class WebLogType:
     LOGIN = 'Login'
     API = 'API'
     SSO = 'SSO'
     OTHER = 'Other'
 
-class DNS_REDIRECE:
+class DNSRedirect:
     TRUE = True
     FALSE = False
 
-class API_STATUS:
+class ApiStatus:
     """后端API接口返回码"""
     INIT = {'status': 0, 'msg': '', 'data': {'res': []}}
     SUCCESS = {'status': 10000, 'msg': 'Success!', 'data': {'res': []}}
