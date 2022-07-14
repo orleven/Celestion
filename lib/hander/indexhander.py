@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 # @author: orleven
 
+from lib.core.env import *
 import re
 from flask import request
 from flask import Response
@@ -21,7 +22,7 @@ from lib.hander.basehander import login_check
 from lib.util.util import random_string
 from werkzeug.security import generate_password_hash
 
-mod = Blueprint('index', __name__, url_prefix='/')
+mod = Blueprint('index', __name__,  url_prefix=f'{PREFIX_URL}/')
 
 
 @mod.route('/', methods=['POST', 'GET'])
