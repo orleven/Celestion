@@ -128,70 +128,65 @@ def fix_response(func):
 
 
 def login_check(func):
-    """
-    权限简单校验，防止未授权
-    """
+    """权限简单校验，防止未授权"""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
 
-        if request.path in ['/login', '/logout']:
-            pass
+        # 初始化
+        user = engine = None
+        log_type = WebLogType.LOGIN
 
-        elif request.path.startswith('/' + STATIC):
-            pass
-
-        elif request.path.startswith("/api/"):
+        # api 访问
+        if request.path.startswith(f"{PREFIX_URL}/api/"):
             api_key = request.headers.get('API-Key', '')
 
             # 只收json格式
-            if request.json == None:
+            if request.json is None:
                 return jsonify(ApiStatus.ERROR_ILLEGAL_PROTOCOL)
 
             # api 访问使用api-key
-            elif api_key == None or api_key == '':
+            elif api_key is None or api_key == '':
                 return jsonify(ApiStatus.ERROR_INVALID_API_KEY)
 
             else:
-                user = db.session.query(User).filter(or_(User.api_key == api_key)).first()
-                if user != None:
-                    if user.to_json()['status'] != UserStatus.OK:
-                        return jsonify(ApiStatus.ERROR_ACCOUNT)
-                    else:
-                        user.login_time = get_time()
-                        save_sql(user)
-                else:
+                # 与api通信，使用api_key
+                user = db.session.query(User).filter(User.api_key == api_key).first()
+                if user is None:
                     return jsonify(ApiStatus.ERROR_INVALID_API_KEY)
-
-        else:
-            user_token = session.get('user')
-            if user_token != None:
-                user = User.verify_auth_token(user_token)
-                if user != None:
-                    user_dict = user.to_json()
-
-                    # 账号被ban
-                    if user_dict['status'] != UserStatus.OK:
-                        return jsonify(ApiStatus.ERROR_ACCOUNT)
-
-                    else:
-                        if user_dict['role'] not in [UserRole.GUEST, UserRole.ADMIN, UserRole.USER]:
-                            return jsonify(ApiStatus.ERROR_ACCOUNT)
-
-                        ip = request.remote_addr
-                        log_type = WebLogType.LOGIN  # 日志类型
-                        description = str(request.json)
-                        url = request.path
-                        update_time = get_time()
-                        log = Log(ip=ip, log_type=log_type, description=description, url=url, user=user,
-                                  update_time=update_time)
-                        save_sql(log)
                 else:
-                    return redirect(url_for('index.login'))
-            else:
-                return redirect(url_for('index.login'))
-        return func(*args, **kwargs)
+                    log_type = WebLogType.API
+        else:
+            # Web访问
+            user_token = session.get('user')
+            if user_token is not None:
+                user = User.verify_auth_token(user_token)
+                log_type = WebLogType.LOGIN
 
+        # 用户/接口访问
+        if user:
+            user_dict = user.to_json()
+            if user_dict['status'] != UserStatus.OK:
+                return jsonify(ApiStatus.ERROR_ACCOUNT)
+            elif user_dict['role'] != UserRole.ADMIN and request.path.startswith(f"{PREFIX_URL}/manager/"):
+                return jsonify(ApiStatus.ERROR_ACCESS)
+            elif user_dict['role'] == UserRole.GUEST:
+                return jsonify(ApiStatus.ERROR_ACCESS)
+
+            description = str(request.get_json(silent=True))
+            log = Log(ip=request.remote_addr, log_type=log_type, description=description, url=request.path, user=user, update_time=get_time())
+            save_sql(log)
+
+        # engine内部通信
+        elif engine:
+            engine.update_time = get_time()
+            save_sql(engine)
+
+        # 未认证
+        else:
+            return redirect(url_for('index.login'))
+
+        return func(*args, **kwargs)
     return wrapper
 
 
