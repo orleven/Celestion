@@ -63,7 +63,7 @@ def login():
                         save_sql(user)
                         session['username'] = user.username
                         session["user"] = user.generate_auth_token(expiration=3600)
-                        return make_response(redirect('/', code=302))
+                        return redirect(url_for('index.dashboard'))
 
                 user.failed_time = get_time()
                 user.login_failed += user.login_failed
